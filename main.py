@@ -50,7 +50,6 @@ encoder = encoder.to(device)
 decoder = decoder.to(device)
 print('Models built and ready to go!')
 
-
 clip = 50.0
 teacher_forcing_ratio = 1.0
 learning_rate = 0.0001
@@ -58,6 +57,7 @@ decoder_learning_ratio = 5.0
 n_iteration = 4000
 print_every = 1
 save_every = 500
+epoch = 15
 
 encoder.train()
 decoder.train()
@@ -70,10 +70,11 @@ if loadFilename:
     decoder_optimizer.load_state_dict(decoder_optimizer_sd)
 
 print("Starting Training!")
-trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
-           embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size,
-           print_every, save_every, clip, corpus_name, loadFilename, device)
-
+for e in range(epoch):
+    print("Epoch " + str(e) + ": Starting Training!")
+    encoder, decoder, encoder_optimizer, decoder_optimizer, embedding = trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
+                                                                                   embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size,
+                                                                                   print_every, save_every, clip, corpus_name, loadFilename, device)
 
 encoder.eval()
 decoder.eval()
