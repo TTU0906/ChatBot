@@ -90,5 +90,3 @@ class LuongAttnDecoderRNN(nn.Module):
         output = F.softmax(output, dim=1)
         return output, hidden
 
-
-
