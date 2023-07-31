@@ -23,8 +23,7 @@ class Voc:
         self.trimmed = False
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {self.PAD_token: "PAD",
-                           self.SOS_token: "SOS", self.EOS_token: "EOS"}
+        self.index2word = {self.PAD_token: "PAD", self.SOS_token: "SOS", self.EOS_token: "EOS"}
         self.num_words = 3
 
     def addSentence(self, sentence):
@@ -52,14 +51,12 @@ class Voc:
                 keep_words.append(k)
 
         print('keep_words {} / {} = {:.4f}'.format(
-            len(keep_words), len(self.word2index), len(
-                keep_words) / len(self.word2index)
+            len(keep_words), len(self.word2index), len(keep_words) / len(self.word2index)
         ))
 
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {self.PAD_token: "PAD",
-                           self.SOS_token: "SOS", self.EOS_token: "EOS"}
+        self.index2word = {self.PAD_token: "PAD", self.SOS_token: "SOS", self.EOS_token: "EOS"}
         self.num_words = 3
         for word in keep_words:
             self.addWord(word)
@@ -135,8 +132,7 @@ def trimRareWords(voc, pairs, MIN_COUNT):
         if keep_input and keep_output:
             keep_pairs.append(pair)
 
-    print("Trimmed from {} pairs to {}, {:.4f} of total".format(
-        len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
+    print("Trimmed from {} pairs to {}, {:.4f} of total".format(len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
     return keep_pairs
 
 
@@ -203,13 +199,11 @@ class GreedySearchDecoder(nn.Module):
     def forward(self, input_seq, input_length, max_length):
         encoder_outputs, encoder_hidden = self.encoder(input_seq, input_length)
         decoder_hidden = encoder_hidden[:self.decoder.n_layers]
-        decoder_input = torch.ones(
-            1, 1, device=self.device, dtype=torch.long) * self.SOS_token
+        decoder_input = torch.ones(1, 1, device=self.device, dtype=torch.long) * self.SOS_token
         all_tokens = torch.zeros([0], device=self.device, dtype=torch.long)
         all_scores = torch.zeros([0], device=self.device)
         for _ in range(max_length):
-            decoder_output, decoder_hidden = self.decoder(
-                decoder_input, decoder_hidden, encoder_outputs)
+            decoder_output, decoder_hidden = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
             decoder_scores, decoder_input = torch.max(decoder_output, dim=1)
             all_tokens = torch.cat((all_tokens, decoder_input), dim=0)
             all_scores = torch.cat((all_scores, decoder_scores), dim=0)
@@ -226,11 +220,11 @@ if __name__ == '__main__':
     print(save_dir)
     pairs = trimRareWords(voc, pairs, MIN_COUNT)
     small_batch_size = 5
-    batches = batch2TrainData(voc, [random.choice(pairs)
-                              for _ in range(small_batch_size)])
+    batches = batch2TrainData(voc, [random.choice(pairs) for _ in range(small_batch_size)])
     input_variable, lengths, target_variable, mask, max_target_len = batches
     print("input_variable:", input_variable)
     print("lengths:", lengths)
     print("target_variable:", target_variable)
     print("mask:", mask)
     print("max_target_len:", max_target_len)
+
