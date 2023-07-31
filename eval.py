@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from utils import *
-from model import *
 
 
 def evaluate(encoder, decoder, searcher, voc, sentence, device, max_length=10):
@@ -40,8 +39,13 @@ def evaluateInput(encoder, decoder, searcher, voc, device):
 
 if __name__ == '__main__':
     device = 'cpu'
-    model_name = 'cb_model'
+    model_name = 'GRU_dot_model'
     attn_model = 'dot'
+
+    if model_name[0] == 'G':
+        from model_GRU import *
+    if model_name[0] == 'L':
+        from model_LSTM import *
 
     hidden_size = 500
     encoder_n_layers = 2
@@ -50,28 +54,21 @@ if __name__ == '__main__':
     batch_size = 64
 
     loadFilename = './data/save/cb_model/cornell movie-dialogs corpus/2-2_500/4000_checkpoint.tar'
-    checkpoint_iter = 4000
-
-    corpus_name = "cornell movie-dialogs corpus"
-    corpus = os.path.join("data", corpus_name)
-    datafile = os.path.join(corpus, "formatted_movie_lines.txt")
-    save_dir = os.path.join("data", "save")
-    voc, pairs = loadPrepareData(corpus, corpus_name, datafile)
-
-    if loadFilename:
-        print(loadFilename)
-        checkpoint = torch.load(loadFilename)
-        encoder_sd = checkpoint['en']
-        decoder_sd = checkpoint['de']
-        encoder_optimizer_sd = checkpoint['en_opt']
-        decoder_optimizer_sd = checkpoint['de_opt']
-        embedding_sd = checkpoint['embedding']
-        voc.__dict__ = checkpoint['voc_dict']
+    print(loadFilename)
+    checkpoint = torch.load(loadFilename, map_location=torch.device('cpu'))
+    encoder_sd = checkpoint['en']
+    decoder_sd = checkpoint['de']
+    encoder_optimizer_sd = checkpoint['en_opt']
+    decoder_optimizer_sd = checkpoint['de_opt']
+    embedding_sd = checkpoint['embedding']
+    voc = Voc('eval')
+    voc.__dict__ = checkpoint['voc_dict']
     embedding = nn.Embedding(voc.num_words, hidden_size)
-    if loadFilename:
-        embedding.load_state_dict(embedding_sd)
+    embedding.load_state_dict(embedding_sd)
     encoder = EncoderRNN(hidden_size, embedding, encoder_n_layers, dropout)
     decoder = LuongAttnDecoderRNN(attn_model, embedding, hidden_size, voc.num_words, decoder_n_layers, dropout)
+    encoder.load_state_dict(encoder_sd)
+    decoder.load_state_dict(decoder_sd)
     encoder.eval()
     decoder.eval()
     searcher = GreedySearchDecoder(encoder, decoder, device)
