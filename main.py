@@ -5,12 +5,18 @@ from __future__ import unicode_literals
 
 from torch import optim
 from train import *
-from model import *
-from eval import *
+import random
+
+random.seed(2018)
 
 device = 'cpu'
-model_name = 'cb_model'
+model_name = 'LSTM_dot_model'
 attn_model = 'dot'
+
+if model_name[0] == 'G':
+    from model_GRU import *
+if model_name[0] == 'L':
+    from model_LSTM import *
 
 hidden_size = 500
 encoder_n_layers = 2
@@ -55,7 +61,7 @@ teacher_forcing_ratio = 1.0
 learning_rate = 0.0001
 decoder_learning_ratio = 5.0
 n_iteration = 4000
-print_every = 1
+print_every = 100
 save_every = 500
 epoch = 15
 
@@ -72,13 +78,9 @@ if loadFilename:
 print("Starting Training!")
 for e in range(epoch):
     print("Epoch " + str(e) + ": Starting Training!")
+    save_dir = os.path.join("data", "save", str(e))
     encoder, decoder, encoder_optimizer, decoder_optimizer, embedding = trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
                                                                                    embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size,
                                                                                    print_every, save_every, clip, corpus_name, loadFilename, device)
+    valIters(voc, pairs, encoder, decoder, device)
 
-encoder.eval()
-decoder.eval()
-
-searcher = GreedySearchDecoder(encoder, decoder)
-
-evaluateInput(encoder, decoder, searcher, voc, device)
