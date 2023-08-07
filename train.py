@@ -2,9 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import torch
-import random
-import os
 
 import tqdm
 
@@ -26,7 +23,7 @@ def train(input_variable, lengths, target_variable, mask, max_target_len, encode
     decoder_optimizer.zero_grad()
 
     input_variable = input_variable.to(device)
-    lengths = lengths.to(device)
+    lengths = lengths.int()
     target_variable = target_variable.to(device)
     mask = mask.to(device)
 
@@ -77,9 +74,10 @@ def train(input_variable, lengths, target_variable, mask, max_target_len, encode
     return sum(print_losses) / n_totals
 
 
-def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer, embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size, print_every, save_every, clip, corpus_name, loadFilename,
+def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer, embedding,
+               encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size, print_every, save_every, clip,
+               corpus_name, loadFilename,
                device, checkpoint=None):
-
     training_batches = [batch2TrainData(voc, [random.choice(pairs) for _ in range(batch_size)])
                         for _ in range(n_iteration)]
 
@@ -101,11 +99,14 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
 
         if iteration % print_every == 0:
             print_loss_avg = print_loss / print_every
-            print("Iteration: {}; Percent complete: {:.1f}%; Average loss: {:.4f}".format(iteration, iteration / n_iteration * 100, print_loss_avg))
+            print("Iteration: {}; Percent complete: {:.1f}%; Average loss: {:.4f}".format(iteration,
+                                                                                          iteration / n_iteration * 100,
+                                                                                          print_loss_avg))
             print_loss = 0
 
         if (iteration % save_every == 0):
-            directory = os.path.join(save_dir, model_name, corpus_name, '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, 500))
+            directory = os.path.join(save_dir, model_name, corpus_name,
+                                     '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, 500))
             if not os.path.exists(directory):
                 os.makedirs(directory)
             torch.save({
@@ -122,27 +123,25 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
     return encoder, decoder, encoder_optimizer, decoder_optimizer, embedding
 
 
-
-def evaluate(encoder, decoder, searcher, voc, sentence, device, max_length=10):
+def evaluate(searcher, voc, sentence, device, max_length=10):
     indexes_batch = [indexesFromSentence(voc, sentence)]
     lengths = torch.tensor([len(indexes) for indexes in indexes_batch])
     input_batch = torch.LongTensor(indexes_batch).transpose(0, 1)
     input_batch = input_batch.to(device)
-    lengths = lengths.to(device)
+    lengths = lengths.int()
     tokens, scores = searcher(input_batch, lengths, max_length)
     decoded_words = [voc.index2word[token.item()] for token in tokens]
 
     return decoded_words
 
 
-def evaluateInput(encoder, decoder, searcher, voc, device):
-    input_sentence = ''
+def evaluateInput(searcher, voc, device):
     while True:
         try:
             input_sentence = input('> ')
             if input_sentence == 'q' or input_sentence == 'quit': break
             input_sentence = normalizeString(input_sentence)
-            output_words = evaluate(encoder, decoder, searcher, voc, input_sentence, device)
+            output_words = evaluate(searcher, voc, input_sentence, device)
             words = []
             for word in output_words:
                 if word == 'EOS':
@@ -156,16 +155,23 @@ def evaluateInput(encoder, decoder, searcher, voc, device):
 
 
 def valIters(voc, pairs, encoder, decoder, device):
-    val_len = int(len(pairs) * 0.3)
+    encoder.eval()
+    decoder.eval()
+    val_len = int(len(pairs) * 0.2)
     pairs = pairs[val_len:]
     searcher = GreedySearchDecoder(encoder, decoder, device)
     correct = 0
     total = 0
     for pair in tqdm.tqdm(pairs):
-        question, answer = pair
+        if len(pair) == 2:
+            question, answer = pair
+        else:
+            continue
+        if len(question) > 10 and len(answer) > 10:
+            continue
         input_sentence = normalizeString(question)
         answer = normalizeString(answer).split(' ')
-        output_words = evaluate(encoder, decoder, searcher, voc, input_sentence, device)
+        output_words = evaluate(searcher, voc, input_sentence, device)
         total += len(answer)
         for word in output_words:
             if word in answer:
