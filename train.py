@@ -97,7 +97,7 @@ def trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, deco
         loss = train(input_variable, lengths, target_variable, mask, max_target_len, encoder,
                      decoder, embedding, encoder_optimizer, decoder_optimizer, batch_size, clip, device)
         print_loss += loss
-        
+
         if iteration % print_every == 0:
             print_loss_avg = print_loss / print_every
             print("Iteration: {}; Percent complete: {:.1f}%; Average loss: {:.4f}".format(iteration,
