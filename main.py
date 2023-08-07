@@ -7,11 +7,13 @@ from torch import optim
 from train import *
 import random
 
-random.seed(2018)
+random.seed(2023)
 
 device = 'cpu'
-model_name = 'LSTM_dot_model'
-attn_model = 'dot'
+model_name = 'GRU_concat_model'
+# attn_model = 'dot'
+# attn_model = 'general'
+attn_model = 'concat'
 
 if model_name[0] == 'G':
     from model_GRU import *
@@ -22,10 +24,10 @@ hidden_size = 500
 encoder_n_layers = 2
 decoder_n_layers = 2
 dropout = 0.1
-batch_size = 64
-
+batch_size = 256
 loadFilename = None
 checkpoint_iter = 4000
+
 
 if loadFilename:
     checkpoint = torch.load(loadFilename)
@@ -62,11 +64,10 @@ learning_rate = 0.0001
 decoder_learning_ratio = 5.0
 n_iteration = 4000
 print_every = 100
-save_every = 500
-epoch = 15
+save_every = 4000
+epoch = 20
 
-encoder.train()
-decoder.train()
+
 
 print('Building optimizers ...')
 encoder_optimizer = optim.Adam(encoder.parameters(), lr=learning_rate)
@@ -79,8 +80,24 @@ print("Starting Training!")
 for e in range(epoch):
     print("Epoch " + str(e) + ": Starting Training!")
     save_dir = os.path.join("data", "save", str(e))
+    encoder.train()
+    decoder.train()
     encoder, decoder, encoder_optimizer, decoder_optimizer, embedding = trainIters(model_name, voc, pairs, encoder, decoder, encoder_optimizer, decoder_optimizer,
                                                                                    embedding, encoder_n_layers, decoder_n_layers, save_dir, n_iteration, batch_size,
                                                                                    print_every, save_every, clip, corpus_name, loadFilename, device)
-    valIters(voc, pairs, encoder, decoder, device)
+    acc = valIters(voc, pairs, encoder, decoder, device)
+    print("\n Acc Score: ", acc)
+directory = os.path.join(save_dir, model_name, corpus_name, '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, 500))
+if not os.path.exists(directory):
+    os.makedirs(directory)
+torch.save({
+#     'iteration': iteration,
+    'en': encoder.state_dict(),
+    'de': decoder.state_dict(),
+    'en_opt': encoder_optimizer.state_dict(),
+    'de_opt': decoder_optimizer.state_dict(),
+#     'loss': loss,
+    'voc_dict': voc.__dict__,
+    'embedding': embedding.state_dict()
+}, os.path.join(directory, '{}_{}.tar'.format('final', 'checkpoint')))
 
