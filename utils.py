@@ -95,7 +95,7 @@ def filterPairs(pairs):
     return [pair for pair in pairs if filterPair(pair)]
 
 
-def loadPrepareData(corpus_name, datafile):
+def loadPrepareData(corpus, corpus_name, datafile):
     print("Start preparing training data ...")
     voc, pairs = readVocs(datafile, corpus_name)
     print("Read {!s} sentence pairs".format(len(pairs)))
@@ -132,8 +132,7 @@ def trimRareWords(voc, pairs, MIN_COUNT):
         if keep_input and keep_output:
             keep_pairs.append(pair)
 
-    print("Trimmed from {} pairs to {}, {:.4f} of total".format(len(pairs), len(keep_pairs),
-                                                                len(keep_pairs) / len(pairs)))
+    print("Trimmed from {} pairs to {}, {:.4f} of total".format(len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
     return keep_pairs
 
 
@@ -217,7 +216,7 @@ if __name__ == '__main__':
     corpus = os.path.join("data", corpus_name)
     datafile = os.path.join(corpus, "formatted_movie_lines.txt")
     save_dir = os.path.join("data", "save")
-    voc, pairs = loadPrepareData(corpus_name, datafile)
+    voc, pairs = loadPrepareData(corpus, corpus_name, datafile)
     print(save_dir)
     pairs = trimRareWords(voc, pairs, MIN_COUNT)
     small_batch_size = 5
@@ -228,3 +227,4 @@ if __name__ == '__main__':
     print("target_variable:", target_variable)
     print("mask:", mask)
     print("max_target_len:", max_target_len)
+
