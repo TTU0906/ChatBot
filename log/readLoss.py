@@ -43,7 +43,6 @@ if __name__ == '__main__':
 
     plt.plot(general, color='blue', label='General', linewidth=0.8)
 
-
     plt.xlabel('Train Steps')
     plt.ylabel('Loss')
     plt.title('GRU Loss')
