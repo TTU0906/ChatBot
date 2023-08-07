@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from utils import *
 
 
-def evaluate(encoder, decoder, searcher, voc, sentence, device, max_length=10):
+def evaluate(searcher, voc, sentence, device, max_length=10):
     indexes_batch = [indexesFromSentence(voc, sentence)]
     lengths = torch.tensor([len(indexes) for indexes in indexes_batch])
     input_batch = torch.LongTensor(indexes_batch).transpose(0, 1)
@@ -17,14 +17,13 @@ def evaluate(encoder, decoder, searcher, voc, sentence, device, max_length=10):
     return decoded_words
 
 
-def evaluateInput(encoder, decoder, searcher, voc, device):
-    input_sentence = ''
+def evaluateInput(searcher, voc, device):
     while (1):
         try:
             input_sentence = input('> ')
             if input_sentence == 'q' or input_sentence == 'quit': break
             input_sentence = normalizeString(input_sentence)
-            output_words = evaluate(encoder, decoder, searcher, voc, input_sentence, device)
+            output_words = evaluate(searcher, voc, input_sentence, device)
             words = []
             for word in output_words:
                 if word == 'EOS':
@@ -72,4 +71,4 @@ if __name__ == '__main__':
     encoder.eval()
     decoder.eval()
     searcher = GreedySearchDecoder(encoder, decoder, device)
-    evaluateInput(encoder, decoder, searcher, voc, device)
+    evaluateInput(searcher, voc, device)
